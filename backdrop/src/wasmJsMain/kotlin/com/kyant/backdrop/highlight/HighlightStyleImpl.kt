@@ -6,7 +6,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import com.kyant.backdrop.AmbientHighlightShaderString
+import com.kyant.backdrop.DefaultHighlightShaderString
 import com.kyant.backdrop.RuntimeShaderCache
+import kotlin.math.PI
 
 @Immutable
 data class DefaultHighlightStyle(
@@ -20,8 +23,18 @@ data class DefaultHighlightStyle(
         shape: Shape,
         runtimeShaderCache: RuntimeShaderCache
     ): Shader? {
-        // TODO: implement SkSL-based highlight shader for wasmJs
-        return null
+        val builder = runtimeShaderCache.obtainRuntimeShaderBuilder(
+            "Default",
+            DefaultHighlightShaderString
+        )
+        builder.uniform("size", size.width, size.height)
+        val radii = getCornerRadii(shape)
+        builder.uniform("cornerRadii", radii[0], radii[1], radii[2], radii[3])
+        val c = color.copy(alpha = 1f)
+        builder.uniform("color", c.red, c.green, c.blue, c.alpha)
+        builder.uniform("angle", angle * (PI / 180f).toFloat())
+        builder.uniform("falloff", falloff)
+        return builder.makeShader()
     }
 }
 
@@ -38,8 +51,16 @@ data class AmbientHighlightStyle(
         shape: Shape,
         runtimeShaderCache: RuntimeShaderCache
     ): Shader? {
-        // TODO: implement SkSL-based ambient highlight shader for wasmJs
-        return null
+        val builder = runtimeShaderCache.obtainRuntimeShaderBuilder(
+            "Ambient",
+            AmbientHighlightShaderString
+        )
+        builder.uniform("size", size.width, size.height)
+        val radii = getCornerRadii(shape)
+        builder.uniform("cornerRadii", radii[0], radii[1], radii[2], radii[3])
+        builder.uniform("angle", 45f * (PI / 180f).toFloat())
+        builder.uniform("falloff", 1f)
+        return builder.makeShader()
     }
 }
 
