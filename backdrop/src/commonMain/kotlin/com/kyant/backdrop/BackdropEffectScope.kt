@@ -1,9 +1,5 @@
 package com.kyant.backdrop
 
-import android.graphics.RenderEffect
-import android.graphics.RuntimeShader
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -20,24 +16,19 @@ sealed interface BackdropEffectScope : Density, RuntimeShaderCache {
 
     var padding: Float
 
-    var renderEffect: RenderEffect?
+    var renderEffect: PlatformRenderEffect?
 }
 
-internal abstract class BackdropEffectScopeImpl : BackdropEffectScope, RuntimeShaderCache {
+internal abstract class BackdropEffectScopeImpl : BackdropEffectScope {
 
     override var density: Float = 1f
     override var fontScale: Float = 1f
     override var size: Size = Size.Unspecified
     override var layoutDirection: LayoutDirection = LayoutDirection.Ltr
     override var padding: Float = 0f
-    override var renderEffect: RenderEffect? = null
+    override var renderEffect: PlatformRenderEffect? = null
 
-    private val runtimeShaderCache = RuntimeShaderCacheImpl()
-
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    override fun obtainRuntimeShader(key: String, string: String): RuntimeShader {
-        return runtimeShaderCache.obtainRuntimeShader(key, string)
-    }
+    protected abstract val runtimeShaderCache: RuntimeShaderCache
 
     fun update(scope: DrawScope): Boolean {
         val newDensity = scope.density
@@ -73,6 +64,6 @@ internal abstract class BackdropEffectScopeImpl : BackdropEffectScope, RuntimeSh
         layoutDirection = LayoutDirection.Ltr
         padding = 0f
         renderEffect = null
-        runtimeShaderCache.clear()
+        runtimeShaderCache.clearCache()
     }
 }

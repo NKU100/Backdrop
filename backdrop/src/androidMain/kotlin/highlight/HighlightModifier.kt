@@ -21,7 +21,9 @@ import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.util.fastCoerceAtMost
+import com.kyant.backdrop.RuntimeShaderCache
 import com.kyant.backdrop.RuntimeShaderCacheImpl
+import com.kyant.backdrop.clearCache
 import com.kyant.backdrop.ShapeProvider
 import com.kyant.backdrop.clipOutline
 import kotlin.math.ceil
@@ -143,7 +145,7 @@ internal class HighlightNode(
             highlightLayer = null
         }
         clipPath = null
-        runtimeShaderCache.clear()
+        runtimeShaderCache.clearCache()
         prevStyle = null
     }
 

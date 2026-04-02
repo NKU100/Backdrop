@@ -8,11 +8,15 @@ plugins {
 group = "com.kyant.backdrop"
 version = "1.0.6-kmp"
 
+@OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 kotlin {
     androidLibrary {
         namespace = "com.kyant.backdrop"
         compileSdk = 36
         minSdk = 21
+    }
+    wasmJs {
+        browser()
     }
 
     compilerOptions {

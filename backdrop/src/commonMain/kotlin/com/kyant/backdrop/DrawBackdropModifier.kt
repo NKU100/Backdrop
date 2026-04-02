@@ -1,6 +1,5 @@
 package com.kyant.backdrop
 
-import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,7 +8,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
@@ -31,15 +29,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import com.kyant.backdrop.backdrops.LayerBackdrop
-import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.highlight.HighlightElement
-import com.kyant.backdrop.shadow.InnerShadow
-import com.kyant.backdrop.shadow.InnerShadowElement
-import com.kyant.backdrop.shadow.Shadow
-import com.kyant.backdrop.shadow.ShadowElement
 
-private val DefaultHighlight = { Highlight.Default }
-private val DefaultShadow = { Shadow.Default }
 private val DefaultOnDrawBackdrop: DrawScope.(DrawScope.() -> Unit) -> Unit = { it() }
 
 fun Modifier.drawPlainBackdrop(
@@ -77,75 +67,7 @@ fun Modifier.drawPlainBackdrop(
         )
 }
 
-fun Modifier.drawBackdrop(
-    backdrop: Backdrop,
-    shape: () -> Shape,
-    effects: BackdropEffectScope.() -> Unit,
-    highlight: (() -> Highlight?)? = DefaultHighlight,
-    shadow: (() -> Shadow?)? = DefaultShadow,
-    innerShadow: (() -> InnerShadow?)? = null,
-    layerBlock: (GraphicsLayerScope.() -> Unit)? = null,
-    exportedBackdrop: LayerBackdrop? = null,
-    onDrawBehind: (DrawScope.() -> Unit)? = null,
-    onDrawBackdrop: DrawScope.(drawBackdrop: DrawScope.() -> Unit) -> Unit = DefaultOnDrawBackdrop,
-    onDrawSurface: (DrawScope.() -> Unit)? = null,
-    onDrawFront: (DrawScope.() -> Unit)? = null
-): Modifier {
-    val shapeProvider = ShapeProvider(shape)
-    return this
-        .then(
-            if (layerBlock != null) {
-                Modifier.graphicsLayer(layerBlock)
-            } else {
-                Modifier
-            }
-        )
-        .then(
-            if (innerShadow != null) {
-                InnerShadowElement(
-                    shapeProvider = shapeProvider,
-                    shadow = innerShadow
-                )
-            } else {
-                Modifier
-            }
-        )
-        .then(
-            if (shadow != null) {
-                ShadowElement(
-                    shapeProvider = shapeProvider,
-                    shadow = shadow
-                )
-            } else {
-                Modifier
-            }
-        )
-        .then(
-            if (highlight != null) {
-                HighlightElement(
-                    shapeProvider = shapeProvider,
-                    highlight = highlight
-                )
-            } else {
-                Modifier
-            }
-        )
-        .then(
-            DrawBackdropElement(
-                backdrop = backdrop,
-                shapeProvider = shapeProvider,
-                effects = effects,
-                layerBlock = layerBlock,
-                exportedBackdrop = exportedBackdrop,
-                onDrawBehind = onDrawBehind,
-                onDrawBackdrop = onDrawBackdrop,
-                onDrawSurface = onDrawSurface,
-                onDrawFront = onDrawFront
-            )
-        )
-}
-
-private class DrawBackdropElement(
+internal class DrawBackdropElement(
     val backdrop: Backdrop,
     val shapeProvider: ShapeProvider,
     val effects: BackdropEffectScope.() -> Unit,
@@ -228,7 +150,7 @@ private class DrawBackdropElement(
     }
 }
 
-private class DrawBackdropNode(
+internal class DrawBackdropNode(
     var backdrop: Backdrop,
     var shapeProvider: ShapeProvider,
     var effects: BackdropEffectScope.() -> Unit,
@@ -240,11 +162,7 @@ private class DrawBackdropNode(
     var onDrawFront: (DrawScope.() -> Unit)?
 ) : LayoutModifierNode, DrawModifierNode, GlobalPositionAwareModifierNode, ObserverModifierNode, Modifier.Node() {
 
-    private val effectScope =
-        object : BackdropEffectScopeImpl() {
-
-            override val shape: Shape get() = shapeProvider.innerShape
-        }
+    private val effectScope = createBackdropEffectScope { shapeProvider.innerShape }
 
     private var graphicsLayer: GraphicsLayer? = null
 
@@ -357,9 +275,9 @@ private class DrawBackdropNode(
     }
 
     private fun updateEffects() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (isPlatformEffectsSupported) {
             effectScope.apply(effects)
-            graphicsLayer?.renderEffect = effectScope.renderEffect?.asComposeRenderEffect()
+            graphicsLayer?.renderEffect = effectScope.renderEffect?.toComposeRenderEffect()
             padding = effectScope.padding
         }
     }
