@@ -1,7 +1,5 @@
 package com.kyant.backdrop.highlight
 
-import android.graphics.BlurMaskFilter
-import android.os.Build
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Paint
@@ -20,12 +18,12 @@ import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.util.fastCoerceAtMost
-import com.kyant.backdrop.RuntimeShaderCache
 import com.kyant.backdrop.RuntimeShaderCacheImpl
-import com.kyant.backdrop.clearCache
 import com.kyant.backdrop.ShapeProvider
+import com.kyant.backdrop.applyBlurMaskFilter
+import com.kyant.backdrop.clearCache
 import com.kyant.backdrop.clipOutline
+import com.kyant.backdrop.isPlatformEffectsSupported
 import kotlin.math.ceil
 
 internal class HighlightElement(
@@ -152,15 +150,10 @@ internal class HighlightNode(
     private fun DrawScope.configurePaint(highlight: Highlight) {
         paint.color = highlight.style.color
         paint.strokeWidth =
-            ceil(highlight.width.toPx().fastCoerceAtMost(size.minDimension / 2f)) * 2f
+            ceil(highlight.width.toPx().coerceAtMost(size.minDimension / 2f)) * 2f
         val blurRadius = highlight.blurRadius.toPx()
-        paint.asFrameworkPaint().maskFilter =
-            if (blurRadius > 0f) {
-                BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
-            } else {
-                null
-            }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        paint.applyBlurMaskFilter(blurRadius)
+        if (isPlatformEffectsSupported) {
             paint.shader = with(highlight.style) {
                 createShader(
                     shape = shapeProvider.shape,

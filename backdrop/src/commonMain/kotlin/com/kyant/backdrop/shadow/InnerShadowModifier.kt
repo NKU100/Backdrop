@@ -1,6 +1,5 @@
 package com.kyant.backdrop.shadow
 
-import android.os.Build
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlurEffect
@@ -22,6 +21,7 @@ import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Density
 import com.kyant.backdrop.ShapeProvider
 import com.kyant.backdrop.clipOutline
+import com.kyant.backdrop.isPlatformEffectsSupported
 
 internal class InnerShadowElement(
     val shapeProvider: ShapeProvider,
@@ -78,7 +78,7 @@ internal class InnerShadowNode(
     override fun ContentDrawScope.draw() {
         drawContent()
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        if (!isPlatformEffectsSupported) return
 
         val shadow = shadow() ?: return
 
@@ -119,7 +119,7 @@ internal class InnerShadowNode(
                 canvas.clipOutline(outline, clipPath)
                 canvas.drawOutline(outline, paint)
                 canvas.translate(offsetX, offsetY)
-                canvas.drawOutline(outline, ShadowMaskPaint)
+                canvas.drawOutline(outline, InnerShadowMaskPaint)
                 canvas.translate(-offsetX, -offsetY)
                 canvas.restore()
             }
@@ -151,16 +151,8 @@ internal class InnerShadowNode(
     private fun DrawScope.configurePaint(shadow: InnerShadow) {
         paint.color = shadow.color
     }
-
-    private fun DrawScope.drawMaskedShadow(outline: Outline, layer: GraphicsLayer) {
-        val canvas = drawContext.canvas
-        canvas.save()
-        canvas.clipOutline(outline, clipPath)
-        drawLayer(layer)
-        canvas.restore()
-    }
 }
 
-private val ShadowMaskPaint = Paint().apply {
+private val InnerShadowMaskPaint = Paint().apply {
     blendMode = BlendMode.Clear
 }
