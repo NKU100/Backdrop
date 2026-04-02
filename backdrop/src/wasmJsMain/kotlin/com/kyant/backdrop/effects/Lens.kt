@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.kyant.backdrop.BackdropEffectScope
 import com.kyant.backdrop.RoundedRectRefractionShaderString
 import com.kyant.backdrop.RoundedRectRefractionWithDispersionShaderString
+import com.kyant.shapes.RoundedRectangularShape
 import org.jetbrains.skia.ImageFilter
 
 fun BackdropEffectScope.lens(
@@ -55,6 +56,16 @@ fun BackdropEffectScope.lens(
 
 private val BackdropEffectScope.cornerRadii: FloatArray?
     get() = when (val shape = shape) {
+        is RoundedRectangularShape -> {
+            val corners = shape.corners(size, layoutDirection, this)
+            floatArrayOf(
+                corners.topLeft,
+                corners.topRight,
+                corners.bottomRight,
+                corners.bottomLeft
+            )
+        }
+
         is AbsoluteRoundedCornerShape -> {
             val size = size
             val maxRadius = size.minDimension / 2f
@@ -99,6 +110,6 @@ private val BackdropEffectScope.cornerRadii: FloatArray?
 
 private fun throwUnsupportedSDFException(): Nothing {
     throw UnsupportedOperationException(
-        "Only CornerBasedShape is supported in lens effects on wasmJs."
+        "Only RoundedRectangularShape or CornerBasedShape is supported in lens effects."
     )
 }
