@@ -1,41 +1,30 @@
 package com.kyant.backdrop.effects
 
-import android.graphics.ColorFilter
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
-import android.graphics.RenderEffect
-import androidx.compose.ui.graphics.asAndroidColorFilter
 import com.kyant.backdrop.BackdropEffectScope
 import com.kyant.backdrop.GammaAdjustmentShaderString
-import com.kyant.backdrop.isPlatformEffectsSupported
+import org.jetbrains.skia.ColorFilter
+import org.jetbrains.skia.ColorMatrix
+import org.jetbrains.skia.ImageFilter
 import kotlin.math.pow
 
 fun BackdropEffectScope.colorFilter(colorFilter: ColorFilter) {
-    if (!isPlatformEffectsSupported) return
-
     val currentEffect = renderEffect
     renderEffect =
         if (currentEffect != null) {
-            RenderEffect.createColorFilterEffect(colorFilter, currentEffect)
+            ImageFilter.makeColorFilter(colorFilter, currentEffect, null)
         } else {
-            RenderEffect.createColorFilterEffect(colorFilter)
+            ImageFilter.makeColorFilter(colorFilter, null, null)
         }
-}
-
-fun BackdropEffectScope.colorFilter(colorFilter: androidx.compose.ui.graphics.ColorFilter) {
-    colorFilter(colorFilter.asAndroidColorFilter())
 }
 
 fun BackdropEffectScope.opacity(alpha: Float) {
     val colorMatrix = ColorMatrix(
-        floatArrayOf(
-            1f, 0f, 0f, 0f, 0f,
-            0f, 1f, 0f, 0f, 0f,
-            0f, 0f, 1f, 0f, 0f,
-            0f, 0f, 0f, alpha, 0f
-        )
+        1f, 0f, 0f, 0f, 0f,
+        0f, 1f, 0f, 0f, 0f,
+        0f, 0f, 1f, 0f, 0f,
+        0f, 0f, 0f, alpha, 0f
     )
-    colorFilter(ColorMatrixColorFilter(colorMatrix))
+    colorFilter(ColorFilter.makeMatrix(colorMatrix))
 }
 
 fun BackdropEffectScope.colorControls(
@@ -59,23 +48,19 @@ private val VibrantColorFilter = colorControlsColorFilter(saturation = 1.5f)
 fun BackdropEffectScope.exposureAdjustment(ev: Float) {
     val scale = 2f.pow(ev / 2.2f)
     val colorMatrix = ColorMatrix(
-        floatArrayOf(
-            scale, 0f, 0f, 0f, 0f,
-            0f, scale, 0f, 0f, 0f,
-            0f, 0f, scale, 0f, 0f,
-            0f, 0f, 0f, 1f, 0f
-        )
+        scale, 0f, 0f, 0f, 0f,
+        0f, scale, 0f, 0f, 0f,
+        0f, 0f, scale, 0f, 0f,
+        0f, 0f, 0f, 1f, 0f
     )
-    colorFilter(ColorMatrixColorFilter(colorMatrix))
+    colorFilter(ColorFilter.makeMatrix(colorMatrix))
 }
 
 fun BackdropEffectScope.gammaAdjustment(power: Float) {
-    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) return
-
-    val shader = obtainRuntimeShader("GammaAdjustment", GammaAdjustmentShaderString).apply {
-        setFloatUniform("power", power)
+    val builder = obtainRuntimeShaderBuilder("GammaAdjustment", GammaAdjustmentShaderString).apply {
+        uniform("power", power)
     }
-    effect(RenderEffect.createRuntimeShaderEffect(shader, "content"))
+    effect(ImageFilter.makeRuntimeShader(builder, "content", null))
 }
 
 private fun colorControlsColorFilter(
@@ -98,12 +83,10 @@ private fun colorControlsColorFilter(
     val cs = c * s
 
     val colorMatrix = ColorMatrix(
-        floatArrayOf(
-            cr + cs, cg, cb, 0f, t,
-            cr, cg + cs, cb, 0f, t,
-            cr, cg, cb + cs, 0f, t,
-            0f, 0f, 0f, 1f, 0f
-        )
+        cr + cs, cg, cb, 0f, t,
+        cr, cg + cs, cb, 0f, t,
+        cr, cg, cb + cs, 0f, t,
+        0f, 0f, 0f, 1f, 0f
     )
-    return ColorMatrixColorFilter(colorMatrix)
+    return ColorFilter.makeMatrix(colorMatrix)
 }

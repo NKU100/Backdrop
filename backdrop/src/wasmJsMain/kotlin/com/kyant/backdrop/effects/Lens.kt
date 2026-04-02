@@ -1,13 +1,12 @@
 package com.kyant.backdrop.effects
 
-import android.graphics.RenderEffect
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.ui.unit.LayoutDirection
 import com.kyant.backdrop.BackdropEffectScope
 import com.kyant.backdrop.RoundedRectRefractionShaderString
 import com.kyant.backdrop.RoundedRectRefractionWithDispersionShaderString
-import com.kyant.shapes.RoundedRectangularShape
+import org.jetbrains.skia.ImageFilter
 
 fun BackdropEffectScope.lens(
     refractionHeight: Float,
@@ -15,7 +14,6 @@ fun BackdropEffectScope.lens(
     depthEffect: Boolean = false,
     chromaticAberration: Boolean = false
 ) {
-    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) return
     if (refractionHeight <= 0f || refractionAmount <= 0f) return
 
     if (padding > 0f) {
@@ -25,30 +23,30 @@ fun BackdropEffectScope.lens(
     val cornerRadii = cornerRadii
     val effect =
         if (cornerRadii != null) {
-            val shader =
+            val builder =
                 if (!chromaticAberration) {
-                    obtainRuntimeShader(
+                    obtainRuntimeShaderBuilder(
                         "Refraction",
                         RoundedRectRefractionShaderString
                     )
                 } else {
-                    obtainRuntimeShader(
+                    obtainRuntimeShaderBuilder(
                         "RefractionWithDispersion",
                         RoundedRectRefractionWithDispersionShaderString
                     )
                 }
-            shader.apply {
-                setFloatUniform("size", size.width, size.height)
-                setFloatUniform("offset", -padding, -padding)
-                setFloatUniform("cornerRadii", cornerRadii)
-                setFloatUniform("refractionHeight", refractionHeight)
-                setFloatUniform("refractionAmount", -refractionAmount)
-                setFloatUniform("depthEffect", if (depthEffect) 1f else 0f)
+            builder.apply {
+                uniform("size", size.width, size.height)
+                uniform("offset", -padding, -padding)
+                uniform("cornerRadii", cornerRadii[0], cornerRadii[1], cornerRadii[2], cornerRadii[3])
+                uniform("refractionHeight", refractionHeight)
+                uniform("refractionAmount", -refractionAmount)
+                uniform("depthEffect", if (depthEffect) 1f else 0f)
                 if (chromaticAberration) {
-                    setFloatUniform("chromaticAberration", 1f)
+                    uniform("chromaticAberration", 1f)
                 }
             }
-            RenderEffect.createRuntimeShaderEffect(shader, "content")
+            ImageFilter.makeRuntimeShader(builder, "content", null)
         } else {
             throwUnsupportedSDFException()
         }
@@ -57,16 +55,6 @@ fun BackdropEffectScope.lens(
 
 private val BackdropEffectScope.cornerRadii: FloatArray?
     get() = when (val shape = shape) {
-        is RoundedRectangularShape -> {
-            val corners = shape.corners(size, layoutDirection, this)
-            floatArrayOf(
-                corners.topLeft,
-                corners.topRight,
-                corners.bottomRight,
-                corners.bottomLeft
-            )
-        }
-
         is AbsoluteRoundedCornerShape -> {
             val size = size
             val maxRadius = size.minDimension / 2f
@@ -111,6 +99,6 @@ private val BackdropEffectScope.cornerRadii: FloatArray?
 
 private fun throwUnsupportedSDFException(): Nothing {
     throw UnsupportedOperationException(
-        "Only RoundedRectangularShape or CornerBasedShape is supported in lens effects."
+        "Only CornerBasedShape is supported in lens effects on wasmJs."
     )
 }

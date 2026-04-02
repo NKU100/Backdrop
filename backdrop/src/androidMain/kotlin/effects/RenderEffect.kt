@@ -1,11 +1,11 @@
 package com.kyant.backdrop.effects
 
 import android.graphics.RenderEffect
-import android.os.Build
 import com.kyant.backdrop.BackdropEffectScope
+import com.kyant.backdrop.isPlatformEffectsSupported
 
 fun BackdropEffectScope.effect(effect: RenderEffect) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+    if (!isPlatformEffectsSupported) return
 
     val currentEffect = renderEffect
     renderEffect =
@@ -17,7 +17,7 @@ fun BackdropEffectScope.effect(effect: RenderEffect) {
 }
 
 fun BackdropEffectScope.effect(effect: androidx.compose.ui.graphics.RenderEffect) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+    if (!isPlatformEffectsSupported) return
 
     effect(effect.asAndroidRenderEffect())
 }
