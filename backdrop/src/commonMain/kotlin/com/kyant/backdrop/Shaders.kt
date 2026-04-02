@@ -16,9 +16,6 @@
 
 package com.kyant.backdrop
 
-import org.intellij.lang.annotations.Language
-
-@Language("AGSL")
 private const val RoundedRectSDF = """
 float radiusAt(float2 coord, float4 radii) {
     if (coord.x >= 0.0) {
@@ -47,7 +44,6 @@ float2 gradSdRoundedRect(float2 coord, float2 halfSize, float radius) {
     }
 }"""
 
-@Language("AGSL")
 internal const val RoundedRectRefractionShaderString = """
 uniform shader content;
 
@@ -83,7 +79,6 @@ half4 main(float2 coord) {
     return content.eval(refractedCoord);
 }"""
 
-@Language("AGSL")
 internal val RoundedRectRefractionWithDispersionShaderString = """
 uniform shader content;
 
@@ -157,7 +152,6 @@ half4 main(float2 coord) {
     return color;
 }"""
 
-@Language("AGSL")
 internal const val DefaultHighlightShaderString = """
 uniform float2 size;
 uniform float4 cornerRadii;
@@ -180,7 +174,6 @@ half4 main(float2 coord) {
     return color * intensity;
 }"""
 
-@Language("AGSL")
 internal const val AmbientHighlightShaderString = """
 uniform float2 size;
 uniform float4 cornerRadii;
@@ -203,7 +196,6 @@ half4 main(float2 coord) {
     return half4(t, t, t, 1.0) * intensity;
 }"""
 
-@Language("AGSL")
 internal const val GammaAdjustmentShaderString = """
 uniform shader content;
 

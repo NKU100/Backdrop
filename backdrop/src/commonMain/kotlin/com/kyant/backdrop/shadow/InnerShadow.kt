@@ -1,6 +1,5 @@
 package com.kyant.backdrop.shadow
 
-import androidx.annotation.FloatRange
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.BlendMode
@@ -18,7 +17,7 @@ data class InnerShadow(
     val radius: Dp = 24f.dp,
     val offset: DpOffset = DpOffset(0f.dp, radius),
     val color: Color = Color.Black.copy(alpha = 0.15f),
-    @param:FloatRange(from = 0.0, to = 1.0) val alpha: Float = 1f,
+    val alpha: Float = 1f,
     val blendMode: BlendMode = DrawScope.DefaultBlendMode
 ) {
 
